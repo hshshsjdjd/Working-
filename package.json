@@ -1,0 +1,23 @@
+{
+  "name": "working-tasks-api",
+  "version": "0.1.0",
+  "description": "Minimal Express REST API used as the development baseline for the Working- repository.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.18.0",
+    "supertest": "^7.0.0"
+  }
+}
