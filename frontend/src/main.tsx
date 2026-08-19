@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <App />
             <Toaster theme="dark" position="top-center" richColors />
           </BrowserRouter>
