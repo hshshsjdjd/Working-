@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-white text-slate-900 antialiased;
+}
+
+/* Dark + AMOLED themes */
+.dark body {
+  @apply bg-surface text-slate-100;
+}
+.dark.amoled body {
+  @apply bg-black text-slate-100;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 8px;
+}
+
+/* Markdown / code presentation */
+.prose-chat pre {
+  @apply my-0 overflow-x-auto rounded-b-lg bg-[#0d1117] p-4 text-sm leading-relaxed;
+}
+.prose-chat code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+.prose-chat :not(pre) > code {
+  @apply rounded bg-surface-muted px-1.5 py-0.5 text-[0.85em] text-nv-green;
+}
+.prose-chat p {
+  @apply my-2 leading-relaxed;
+}
+.prose-chat ul {
+  @apply my-2 list-disc pl-6;
+}
+.prose-chat ol {
+  @apply my-2 list-decimal pl-6;
+}
+.prose-chat a {
+  @apply text-nv-green underline underline-offset-2;
+}
+.prose-chat table {
+  @apply my-3 w-full border-collapse text-sm;
+}
+.prose-chat th,
+.prose-chat td {
+  @apply border border-surface-muted px-3 py-1.5 text-left;
+}
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3 {
+  @apply mb-2 mt-4 font-semibold;
+}
+.prose-chat blockquote {
+  @apply my-2 border-l-2 border-nv-green/60 pl-3 text-slate-400;
+}

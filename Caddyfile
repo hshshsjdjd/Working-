@@ -1,0 +1,25 @@
+# Caddy reverse proxy. SITE_ADDRESS controls the public address:
+#   - ":80"            -> local HTTP (development)
+#   - "yourdomain.com" -> automatic HTTPS via Let's Encrypt (production)
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# Security headers applied at the edge (backend also sets its own).
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# API + health checks -> backend. Everything else -> the SPA (frontend).
+	@backend path /api/* /health /ready
+	handle @backend {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}

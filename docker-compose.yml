@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nvidia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-nvidia_ai}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    # NOTE: no ports published — Postgres is never exposed publicly.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nvidia}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      DATABASE_URL: ${DATABASE_URL}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY}
+      NVIDIA_BASE_URL: ${NVIDIA_BASE_URL:-https://integrate.api.nvidia.com/v1}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      MAX_REQUESTS_PER_MINUTE: ${MAX_REQUESTS_PER_MINUTE:-60}
+      MAX_DAILY_REQUESTS: ${MAX_DAILY_REQUESTS:-1000}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+      MAX_MESSAGE_LENGTH: ${MAX_MESSAGE_LENGTH:-32000}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      - backend
+
+  reverse-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - internal
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge
