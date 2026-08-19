@@ -24,3 +24,6 @@ uploads/
 # OS / editor
 .DS_Store
 *.log
+
+# Cloud env runtime data
+.data/

@@ -90,6 +90,7 @@ export function ChatPage() {
         },
       ]);
 
+      let aborted = false;
       await streamChat(
         {
           conversation_id: conversationId,
@@ -116,12 +117,31 @@ export function ChatPage() {
         },
         controller.signal,
       ).catch((err) => {
-        if (err?.name !== "AbortError") toast.error("Connection interrupted");
+        if (err?.name === "AbortError") aborted = true;
+        else toast.error("Connection interrupted");
       });
 
       setStreaming(false);
       abortRef.current = null;
       qc.invalidateQueries({ queryKey: ["conversations"] });
+
+      // On Stop, keep the partial text already shown — the backend persists the
+      // same partial, so we avoid racing its save (which would briefly blank the
+      // message). Reconcile in the background after it has committed.
+      if (aborted) {
+        setTimeout(() => {
+          api<Message[]>(`/api/conversations/${conversationId}/messages`)
+            .then((fresh) => {
+              // Only reconcile once the server has the persisted partial, so the
+              // visible text is never briefly cleared.
+              if (fresh.some((m) => m.role === "assistant" && m.content)) {
+                setMessages(fresh);
+              }
+            })
+            .catch(() => {});
+        }, 600);
+        return;
+      }
       // Reconcile with server truth (real ids, tokens, persisted partials).
       const fresh = await api<Message[]>(`/api/conversations/${conversationId}/messages`);
       setMessages(fresh);

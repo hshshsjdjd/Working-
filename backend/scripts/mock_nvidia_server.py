@@ -12,12 +12,17 @@ Run: python -m scripts.mock_nvidia_server
 from __future__ import annotations
 
 import json
+import os
 import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
 app = FastAPI()
+
+# Per-token delay for streaming, in seconds. Increase (e.g. MOCK_STREAM_DELAY=0.2)
+# to make streaming slow enough to exercise the "Stop" button during testing.
+_STREAM_DELAY = float(os.environ.get("MOCK_STREAM_DELAY", "0.02"))
 
 
 @app.post("/v1/chat/completions")
@@ -32,7 +37,8 @@ async def chat_completions(request: Request):
     reply = (
         f"Here is a mock streamed answer about: '{last_user[:60]}'.\n\n"
         "```python\nprint('hello from the mock NVIDIA server')\n```\n\n"
-        "This confirms the backend streaming proxy works end to end."
+        "This confirms the backend streaming proxy works end to end. "
+        + ("The quick brown fox jumps over the lazy dog. " * 40)
     )
 
     if not stream:
@@ -52,7 +58,7 @@ async def chat_completions(request: Request):
                 "choices": [{"index": 0, "delta": {"content": token + " "}, "finish_reason": None}],
             }
             yield f"data: {json.dumps(chunk)}\n\n"
-            time.sleep(0.02)
+            time.sleep(_STREAM_DELAY)
         final = {
             "id": "mock",
             "model": model,
