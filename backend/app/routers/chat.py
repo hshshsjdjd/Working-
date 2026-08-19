@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import uuid
 from datetime import datetime, timezone
@@ -15,6 +16,7 @@ from ..db import get_db, session_scope
 from ..deps import AuthContext, get_client_ip, require_csrf
 from ..models import (
     Conversation,
+    FileObject,
     MaintenanceState,
     Message,
     ModelConfig,
@@ -22,6 +24,9 @@ from ..models import (
     User,
     UserSettings,
 )
+
+_TEXT_MIMES = {"text/plain", "text/markdown", "text/csv", "application/json"}
+_MAX_FILE_CHARS = 50000
 from ..ratelimit import RateLimitExceeded, check_rate_limit
 from ..schemas import ChatRequest, MessageOut
 from ..services import nvidia
@@ -110,7 +115,8 @@ def _prepare(db: Session, user: User, payload: ChatRequest, request: Request) ->
         if not history or history[-1]["role"] != "user":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nothing to regenerate")
     else:
-        history.append({"role": "user", "content": payload.content})
+        attached = _load_attached_text(db, user, payload.file_ids)
+        history.append({"role": "user", "content": payload.content + attached})
 
     system_prompt = conv.system_prompt or (s.system_prompt if s else None)
     api_messages = build_messages(
@@ -125,6 +131,25 @@ def _prepare(db: Session, user: User, payload: ChatRequest, request: Request) ->
         "max_tokens": payload.max_tokens if payload.max_tokens is not None else (s.max_tokens if s else 1024),
     }
     return _Prepared(conv, model, api_messages, gen_params, payload.content, payload.regenerate)
+
+
+def _load_attached_text(db: Session, user: User, file_ids: list[uuid.UUID]) -> str:
+    """Read owned text-like attachments and return them as prompt context."""
+    if not file_ids:
+        return ""
+    parts: list[str] = []
+    for fid in file_ids[:5]:
+        f = db.get(FileObject, fid)
+        if f is None or f.user_id != user.id or f.mime_type not in _TEXT_MIMES:
+            continue
+        path = os.path.join(settings.upload_dir, str(user.id), f.stored_name)
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                text = fh.read(_MAX_FILE_CHARS)
+        except OSError:
+            continue
+        parts.append(f"\n\n--- Attached file: {f.original_name} ---\n{text}")
+    return "".join(parts)
 
 
 def _maybe_set_title(conv: Conversation, content: str) -> None:
