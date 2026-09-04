@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cloud List — Puter.js todo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">Puter.js · user-pays cloud KV</p>
+          <h1>Cloud List</h1>
+          <p class="lede">
+            Tasks live in your Puter key-value store — no backend, no API keys.
+          </p>
+        </div>
+        <div class="auth-panel" id="auth-panel">
+          <p class="auth-status" id="auth-status">Checking Puter session…</p>
+          <div class="auth-actions">
+            <button type="button" class="btn primary" id="sign-in-btn" hidden>
+              Sign in with Puter
+            </button>
+            <button type="button" class="btn ghost" id="sign-out-btn" hidden>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <p class="banner" id="banner" hidden></p>
+
+      <main class="board">
+        <form class="composer" id="composer" autocomplete="off">
+          <label class="sr-only" for="todo-text">New task</label>
+          <input
+            id="todo-text"
+            name="text"
+            type="text"
+            maxlength="280"
+            placeholder="What needs doing?"
+            required
+          />
+          <label class="sr-only" for="todo-due">Due date</label>
+          <input id="todo-due" name="due" type="date" />
+          <button type="submit" class="btn primary">Add</button>
+        </form>
+
+        <div class="toolbar">
+          <div class="filters" role="tablist" aria-label="Filter tasks">
+            <button type="button" class="chip is-active" data-filter="all">
+              All
+            </button>
+            <button type="button" class="chip" data-filter="active">
+              Active
+            </button>
+            <button type="button" class="chip" data-filter="completed">
+              Done
+            </button>
+          </div>
+          <div class="toolbar-meta">
+            <span id="counts">0 remaining</span>
+            <button type="button" class="link" id="clear-completed" hidden>
+              Clear completed
+            </button>
+          </div>
+        </div>
+
+        <ul class="todo-list" id="todo-list" aria-live="polite"></ul>
+        <p class="empty" id="empty-state">No tasks yet. Add one above.</p>
+      </main>
+
+      <footer class="site-footer">
+        <a href="https://developer.puter.com">Powered by Puter</a>
+      </footer>
+    </div>
+
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="js/todos.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

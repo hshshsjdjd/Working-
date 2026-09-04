@@ -1,0 +1,10 @@
+{
+  "name": "cloud-list",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless todo list using Puter.js cloud KV storage",
+  "scripts": {
+    "start": "python3 -m http.server 4173",
+    "test": "node --test js/todos.test.js"
+  }
+}
