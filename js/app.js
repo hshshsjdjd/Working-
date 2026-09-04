@@ -165,6 +165,7 @@
 
   async function refreshSession() {
     if (!hasPuter()) {
+      state.todos = readLocal();
       render();
       return;
     }
